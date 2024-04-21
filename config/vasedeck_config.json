@@ -1,11 +1,7 @@
 {
     "opacity_threshold": 0.02,
-    "rotation_degree": [
-        135.0
-    ],
-    "rotation_axis": [
-        0
-    ],
+    "rotation_degree": [135.0],
+    "rotation_axis": [0],
     "substep_dt": 1e-4,
     "frame_dt": 4e-2,
     "frame_num": 75,

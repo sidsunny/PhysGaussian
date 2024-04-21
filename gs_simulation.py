@@ -140,6 +140,7 @@ if __name__ == "__main__":
         preprocessing_params["rotation_axis"],
     )
     rotated_pos = apply_rotations(init_pos, rotation_matrices)
+    print ("are rotation and init pos the same? ", rotated_pos == init_pos)
 
     if args.debug:
         particle_position_tensor_to_ply(rotated_pos, "./log/rotated_particles.ply")
@@ -151,6 +152,8 @@ if __name__ == "__main__":
         None,
         None,
     )
+    print ("preprocessing_params[sim_area] ", preprocessing_params["sim_area"])
+    
     if preprocessing_params["sim_area"] is not None:
         boundary = preprocessing_params["sim_area"]
         assert len(boundary) == 6
