@@ -230,6 +230,9 @@ def decode_param_json(json_file):
 def set_boundary_conditions(
     mpm_solver: MPM_Simulator_WARP, bc_params: dict, time_params: dict
 ):
+    """
+    Default: bc["type"] has 2 keys ==> "cuboid", "particle_impulse"
+    """
     for bc in bc_params:
         if bc["type"] == "cuboid":
             assert (

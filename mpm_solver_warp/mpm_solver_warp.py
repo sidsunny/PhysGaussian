@@ -15,6 +15,7 @@ class MPM_Simulator_WARP:
     def initialize(self, n_particles, n_grid=100, grid_lim=1.0, device="cuda:0"):
         self.n_particles = n_particles
 
+        # defines the material properties of the MPM simulation
         self.mpm_model = MPMModelStruct()
         # domain will be [0,grid_lim]*[0,grid_lim]*[0,grid_lim] !!!
         # domain will be [0,grid_lim]*[0,grid_lim]*[0,grid_lim] !!!
@@ -30,6 +31,12 @@ class MPM_Simulator_WARP:
         ) = self.mpm_model.grid_lim / self.mpm_model.n_grid, float(
             self.mpm_model.n_grid / self.mpm_model.grid_lim
         )
+
+        print ("n_particles: ", self.n_particles)
+        print ("grid_lim: ", self.mpm_model.grid_lim)
+        print ("n_grid: ", self.mpm_model.n_grid)
+        print ("dx: ", self.mpm_model.dx)
+        print ("inv_dx: ", self.mpm_model.inv_dx)
 
         self.mpm_model.E = wp.zeros(shape=n_particles, dtype=float, device=device)
         self.mpm_model.nu = wp.zeros(shape=n_particles, dtype=float, device=device)
@@ -56,6 +63,7 @@ class MPM_Simulator_WARP:
 
         self.mpm_model.grid_v_damping_scale = 1.1  # globally applied
 
+        # defines the state of the MPM simulation, including the state of the particles and the grid
         self.mpm_state = MPMStateStruct()
 
         self.mpm_state.particle_x = wp.empty(
@@ -167,9 +175,9 @@ class MPM_Simulator_WARP:
 
         # initial velocity is default to zero
         wp.launch(
-            kernel=set_vec3_to_zero,
-            dim=self.n_particles,
-            inputs=[self.mpm_state.particle_v],
+            kernel=set_vec3_to_zero,                # function that you want to execute on the GPU 
+            dim=self.n_particles,                   # The number of parallel threads or work-items to launch on the GPU.
+            inputs=[self.mpm_state.particle_v],     # The input data to the kernel function
             device=device,
         )
         # initial velocity is default to zero
@@ -392,7 +400,7 @@ class MPM_Simulator_WARP:
             self.mpm_model.grid_dim_x,
             self.mpm_model.grid_dim_y,
             self.mpm_model.grid_dim_z,
-        )
+        )                                       # (50, 50, 50)
         wp.launch(
             kernel=zero_grid,
             dim=(grid_size),
@@ -401,15 +409,22 @@ class MPM_Simulator_WARP:
         )
 
         # apply pre-p2g operations on particles
-        for k in range(len(self.pre_p2g_operations)):
+        # Executes operations that need to be applied before 
+        # particle data is transferred to the grid. 
+        # This could involve setting initial conditions, applying forces, or pre-processing particle states.
+        # print ("self.pre_p2g_operations: ", len(self.pre_p2g_operations))
+
+        for k in range(len(self.pre_p2g_operations)):   # will only execute once
             wp.launch(
                 kernel=self.pre_p2g_operations[k],
                 dim=self.n_particles,
                 inputs=[self.time, dt, self.mpm_state, self.impulse_params[k]],
                 device=device,
             )
+        # print ("self.particle_velocity_modifiers: ", len(self.particle_velocity_modifiers))
+
         # apply dirichlet particle v modifier
-        for k in range(len(self.particle_velocity_modifiers)):
+        for k in range(len(self.particle_velocity_modifiers)):      # does not execute as not provided in bc_params
             wp.launch(
                 kernel=self.particle_velocity_modifiers[k],
                 dim=self.n_particles,

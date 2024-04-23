@@ -276,9 +276,9 @@ def compute_mu_lam_from_E_nu(state: MPMStateStruct, model: MPMModelStruct):
 @wp.kernel
 def zero_grid(state: MPMStateStruct, model: MPMModelStruct):
     grid_x, grid_y, grid_z = wp.tid()
-    state.grid_m[grid_x, grid_y, grid_z] = 0.0
-    state.grid_v_in[grid_x, grid_y, grid_z] = wp.vec3(0.0, 0.0, 0.0)
-    state.grid_v_out[grid_x, grid_y, grid_z] = wp.vec3(0.0, 0.0, 0.0)
+    state.grid_m[grid_x, grid_y, grid_z] = 0.0                          # probably grid momentum
+    state.grid_v_in[grid_x, grid_y, grid_z] = wp.vec3(0.0, 0.0, 0.0)    # grid node momentum/velocity
+    state.grid_v_out[grid_x, grid_y, grid_z] = wp.vec3(0.0, 0.0, 0.0)   # grid node momentum/velocity, after grid update
 
 
 @wp.func

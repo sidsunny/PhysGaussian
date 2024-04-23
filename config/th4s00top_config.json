@@ -37,8 +37,8 @@
         {
             "type": "particle_impulse",
             "force": [
-                -1.8e-1,
                 0.0,
+                -6.8e-1,
                 0.0
             ],
             "num_dt": 1,

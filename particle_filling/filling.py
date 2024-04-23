@@ -248,6 +248,13 @@ def assign_particle_to_grid(pos: ti.template(), grid: ti.template(), grid_dx: fl
 def compute_particle_volume(
     pos: ti.template(), grid: ti.template(), particle_vol: ti.template(), grid_dx: float
 ):
+    """
+    Calculates the volume for each particle based on the number of particles in the corresponding grid cell.
+    The particle's grid cell is identified similarly to the previous kernel. 
+    The volume for each particle is then computed as the volume of the grid cell divided 
+    by the number of particles in that cell. 
+    This implies an assumption that particles are uniformly distributed within each cell.
+    """
     for pi in range(pos.shape[0]):
         p = pos[pi]
         i = ti.floor(p[0] / grid_dx, dtype=int)
@@ -262,6 +269,13 @@ def assign_particle_to_grid(
     grid: ti.template(),
     grid_dx: float,
 ):
+    """
+    Iteratively assigns each particle to a corresponding grid cell.
+    The grid cell indices are determined by dividing the particle position by the grid cell width grid_dx
+    Once the appropriate cell is determined by its indices (i, j, k), 
+    the function increments the value at this cell in the grid. 
+    This increment is used to count how many particles are assigned to each specific cell.
+    """
     for pi in range(pos.shape[0]):
         p = pos[pi]
         i = ti.floor(p[0] / grid_dx, dtype=int)
@@ -271,13 +285,18 @@ def assign_particle_to_grid(
 
 
 def get_particle_volume(pos, grid_n: int, grid_dx: float, unifrom: bool = False):
+    """
+        Default values: grid_n=50, grid_dx=2/50, unifrom=False
+    """
+
     ti_pos = ti.Vector.field(n=3, dtype=float, shape=pos.shape[0])
-    ti_pos.from_torch(pos.reshape(-1, 3))
+    ti_pos.from_torch(pos.reshape(-1, 3))       # converts pos to a vector field
 
-    grid = ti.field(dtype=int, shape=(grid_n, grid_n, grid_n))
-    particle_vol = ti.field(dtype=float, shape=pos.shape[0])
+    # Taichi field that represents a spatial discretization of the space in which the particles are located.
+    grid = ti.field(dtype=int, shape=(grid_n, grid_n, grid_n))      # creates a 3D grid.
+    particle_vol = ti.field(dtype=float, shape=pos.shape[0])       # creates a field to store the volume of each particle.
 
-    assign_particle_to_grid(ti_pos, grid, grid_dx)
+    assign_particle_to_grid(ti_pos, grid, grid_dx)      #
     compute_particle_volume(ti_pos, grid, particle_vol, grid_dx)
 
     if unifrom:

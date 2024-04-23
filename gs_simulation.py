@@ -97,6 +97,12 @@ if __name__ == "__main__":
         camera_params,
     ) = decode_param_json(args.config)
 
+    print ("material_params ", material_params)
+    print ("bc_params ", bc_params)
+    print ("time_params ", time_params)
+    print ("preprocessing_params ", preprocessing_params)
+    print ("camera_params ", camera_params)
+
     # load gaussians
     print("Loading gaussians...")
     model_path = args.model_path
@@ -113,11 +119,19 @@ if __name__ == "__main__":
     print("Initializing scene and pre-processing...")
     params = load_params_from_gs(gaussians, pipeline)
 
-    init_pos = params["pos"]
-    init_cov = params["cov3D_precomp"]
-    init_screen_points = params["screen_points"]
-    init_opacity = params["opacity"]
-    init_shs = params["shs"]
+    print ("params loaded from gs ", params.keys())
+
+    init_pos = params["pos"]                            # (N, 3)
+    init_cov = params["cov3D_precomp"]                  # (N, 6)
+    init_screen_points = params["screen_points"]        # (N, 3)
+    init_opacity = params["opacity"]                    # (N, 1)
+    init_shs = params["shs"]                            # (N, 16, 3)
+
+    print ("init_pos ", init_pos.shape, init_pos[:5])
+    print ("init_cov ", init_cov.shape, init_cov[:5])
+    print ("init_screen_points ", init_screen_points.shape, init_screen_points[:5])
+    print ("init_opacity ", init_opacity.shape, init_opacity[:5])
+    print ("init_shs ", init_shs.shape, init_shs[:5])
 
     # throw away low opacity kernels
     mask = init_opacity[:, 0] > preprocessing_params["opacity_threshold"]
@@ -126,6 +140,8 @@ if __name__ == "__main__":
     init_opacity = init_opacity[mask, :]
     init_screen_points = init_screen_points[mask, :]
     init_shs = init_shs[mask, :]
+
+    print ("init_pos ", init_pos.shape, init_pos[:5])
 
     # rorate and translate object
     if args.debug:
@@ -141,6 +157,8 @@ if __name__ == "__main__":
     )
     rotated_pos = apply_rotations(init_pos, rotation_matrices)
     print ("are rotation and init pos the same? ", rotated_pos == init_pos)
+
+    print ("rotated_pos ", rotated_pos.shape, rotated_pos[:5])
 
     if args.debug:
         particle_position_tensor_to_ply(rotated_pos, "./log/rotated_particles.ply")
@@ -172,8 +190,14 @@ if __name__ == "__main__":
         init_opacity = init_opacity[mask, :]
         init_shs = init_shs[mask, :]
 
+
+    print ("rotated_pos ", torch.min(rotated_pos, dim=0), torch.max(rotated_pos, dim=0))
+
+    # shift and scale object --> normalization
     transformed_pos, scale_origin, original_mean_pos = transform2origin(rotated_pos)
+    print ("transformed_pos ", torch.min(transformed_pos, dim=0), torch.max(transformed_pos, dim=0))
     transformed_pos = shift2center111(transformed_pos)
+    print ("transformed_pos ", torch.min(transformed_pos, dim=0), torch.max(transformed_pos, dim=0))
 
     # modify covariance matrix accordingly
     init_cov = apply_cov_rotations(init_cov, rotation_matrices)
@@ -187,10 +211,11 @@ if __name__ == "__main__":
 
     # fill particles if needed
     gs_num = transformed_pos.shape[0]
+    print ("gs_num ", gs_num)
     device = "cuda:0"
     filling_params = preprocessing_params["particle_filling"]
 
-    if filling_params is not None:
+    if filling_params is not None: # is None by default
         print("Filling internal particles...")
         mpm_init_pos = fill_particles(
             pos=transformed_pos,
@@ -213,8 +238,12 @@ if __name__ == "__main__":
     else:
         mpm_init_pos = transformed_pos.to(device=device)
 
+    print ("mpm_init_pos ", mpm_init_pos.shape, mpm_init_pos[:5])
+
     # init the mpm solver
     print("Initializing MPM solver and setting up boundary conditions...")
+    # get volume (in 3D) of each particle for the grid cell it is assigned to
+    # for the initial point cloud/gaussian splat
     mpm_init_vol = get_particle_volume(
         mpm_init_pos,
         material_params["n_grid"],
@@ -241,6 +270,7 @@ if __name__ == "__main__":
         print("check *.ply files to see if it's ready for simulation")
 
     # set up the mpm solver
+    # initialize the mpm model and particle properties
     mpm_solver = MPM_Simulator_WARP(10)
     mpm_solver.load_initial_data_from_torch(
         mpm_init_pos,
@@ -282,6 +312,7 @@ if __name__ == "__main__":
         if not os.path.exists(directory_to_save):
             os.makedirs(directory_to_save)
 
+        # save data at frame 0
         save_data_at_frame(
             mpm_solver,
             directory_to_save,
@@ -290,10 +321,10 @@ if __name__ == "__main__":
             save_to_h5=args.output_h5,
         )
 
-    substep_dt = time_params["substep_dt"]
-    frame_dt = time_params["frame_dt"]
-    frame_num = time_params["frame_num"]
-    step_per_frame = int(frame_dt / substep_dt)
+    substep_dt = time_params["substep_dt"]      # 0.0001
+    frame_dt = time_params["frame_dt"]          # 0.04
+    frame_num = time_params["frame_num"]        # 125
+    step_per_frame = int(frame_dt / substep_dt) # 400
     opacity_render = opacity
     shs_render = shs
     height = None

@@ -3,6 +3,11 @@ import numpy as np
 from utils.camera_view_utils import *
 
 
+"""
+Normalizes positions stored in position_tensor by translating and scaling 
+the positions such that they range between -0.5 and 0.5, centered around 0, 
+based on the maximum difference (span) in their components.
+"""
 def transform2origin(position_tensor):
     min_pos = torch.min(position_tensor, 0)[0]
     max_pos = torch.max(position_tensor, 0)[0]
