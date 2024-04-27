@@ -401,6 +401,9 @@ class MPM_Simulator_WARP:
             self.mpm_model.grid_dim_y,
             self.mpm_model.grid_dim_z,
         )                                       # (50, 50, 50)
+
+        # sets the grid state to 0. grid_v_in, grid_v_out, grid_m.
+        # automatically launches for all grid cells
         wp.launch(
             kernel=zero_grid,
             dim=(grid_size),
@@ -764,6 +767,12 @@ class MPM_Simulator_WARP:
             model: MPMModelStruct,
             param: Dirichlet_collider,
         ):
+            """
+            seems to handle the interaction between a simulation grid and a collider object.
+            """
+            # Each instance of the kernel function runs for a specific grid point 
+            # identified by grid_x, grid_y, grid_z, which are obtained from wp.tid(), 
+            # representing the thread indices in 3D.
             grid_x, grid_y, grid_z = wp.tid()
             if time >= param.start_time and time < param.end_time:
                 offset = wp.vec3(
@@ -867,7 +876,7 @@ class MPM_Simulator_WARP:
     def add_impulse_on_particles(
         self,
         force,
-        dt,
+        dt,                 # 0.0001
         point=[1, 1, 1],
         size=[1, 1, 1],
         num_dt=1,
@@ -888,6 +897,8 @@ class MPM_Simulator_WARP:
             force[2],
         )
 
+        # mask out particles outside the cuboid defined by
+        # point and size
         wp.launch(
             kernel=selection_add_impulse_on_particles,
             dim=self.n_particles,
@@ -903,6 +914,8 @@ class MPM_Simulator_WARP:
         ):
             p = wp.tid()
             if time >= param.start_time and time < param.end_time:
+                # if the particle is inside the cuboid as retrieved from the mask
+                # apply the impulse
                 if param.mask[p] == 1:
                     impulse = wp.vec3(
                         param.force[0] / state.particle_mass[p],
