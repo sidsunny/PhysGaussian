@@ -1,0 +1,127 @@
+{
+    "opacity_threshold": 0.02,
+    "rotation_degree": [0.0],
+    "rotation_axis": [0],
+    "substep_dt": 1e-4,
+    "frame_dt": 4e-2,
+    "frame_num": 125,
+    "nu": 0.4,
+    "E": 2e6,
+    "material": "jelly",
+    "density": 70,
+    "g": [0,0,0],
+    "grid_v_damping_scale": 0.9999,
+    "rpic_damping": 0.0,
+    "boundary_conditions": [
+        {
+            "type": "cuboid",
+            "point": [
+                1,
+                1,
+                0.87
+            ],
+            "size": [
+                0.5,
+                0.2,
+                0.22
+            ],
+            "velocity": [
+                0,
+                0,
+                0
+            ],
+            "start_time": 0,
+            "end_time": 1e3,
+            "reset": 1
+        },
+        {
+            "type": "particle_impulse",
+            "force": [
+                -7.670111744182004,
+                -3.598305105116384,
+                -7.188893596757201
+            ],
+            "point": [
+                1,
+                0.66,
+                0.92
+            ],
+            "size": [
+                0.5,
+                0.16,
+                0.14
+            ],
+            "num_dt": 1,
+            "start_time": 0
+        },
+        {
+            "type": "particle_impulse",
+            "force": [
+                -0.6722830011356852,
+                0.19639201892736047,
+                0.023253554163935042
+            ],
+            "point": [
+                0.99,
+                1.33,
+                0.9
+            ],
+            "size": [
+                0.08,
+                0.16,
+                0.16
+            ],
+            "num_dt": 1,
+            "start_time": 0
+        },
+        {
+            "type": "particle_impulse",
+            "force": [
+                -0.057635784292427855,
+                0.030740584033361884,
+                0.0071337819020800275
+            ],
+            "point": [
+                1.02,
+                1.0,
+                1.23
+            ],
+            "size": [
+                0.2,
+                0.2,
+                0.15
+            ],
+            "num_dt": 1,
+            "start_time": 0
+        }
+
+    ],
+    "additional_material_params": [
+        {
+            "point": [
+                1.0,
+                1.0,
+                1.5
+            ],
+            "size": [
+                1.0,
+                1.0,
+                0.5
+            ],
+            "nu": 0.4,
+            "E": 2e6,
+            "density": 70
+        }
+    ],
+    "mpm_space_vertical_upward_axis": [0,0,1],
+    "mpm_space_viewpoint_center": [0.95,1.07,1],
+    "default_camera_index": -1,
+    "show_hint": false,
+    "init_azimuthm": 30,
+    "init_elevation": 0,
+    "init_radius": 4.11,
+    "move_camera": true,
+    "delta_a": 0.4,
+    "delta_e": 0.0,
+    "delta_r": 0.0
+}

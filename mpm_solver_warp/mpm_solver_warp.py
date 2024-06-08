@@ -873,6 +873,59 @@ class MPM_Simulator_WARP:
     # particle_v += force/particle_mass * dt
     # this is applied from start_dt, ends after num_dt p2g2p's
     # particle velocity is changed before p2g at each timestep
+    # def add_impulse_on_particles(
+    #     self,
+    #     force,
+    #     dt,                 # 0.0001
+    #     point=[1, 1, 1],
+    #     size=[1, 1, 1],
+    #     num_dt=1,
+    #     start_time=0.0,
+    #     device="cuda:0",
+    # ):
+    #     impulse_param = Impulse_modifier()
+    #     impulse_param.start_time = start_time
+    #     impulse_param.end_time = start_time + dt * num_dt
+
+    #     impulse_param.point = wp.vec3(point[0], point[1], point[2])
+    #     impulse_param.size = wp.vec3(size[0], size[1], size[2])
+    #     impulse_param.mask = wp.zeros(shape=self.n_particles, dtype=int, device=device)
+
+    #     impulse_param.force = wp.vec3(
+    #         force[0],
+    #         force[1],
+    #         force[2],
+    #     )
+
+    #     # mask out particles outside the cuboid defined by
+    #     # point and size
+    #     wp.launch(
+    #         kernel=selection_add_impulse_on_particles,
+    #         dim=self.n_particles,
+    #         inputs=[self.mpm_state, impulse_param],
+    #         device=device,
+    #     )
+
+    #     self.impulse_params.append(impulse_param)
+
+    #     @wp.kernel
+    #     def apply_force(
+    #         time: float, dt: float, state: MPMStateStruct, param: Impulse_modifier
+    #     ):
+    #         p = wp.tid()
+    #         if time >= param.start_time and time < param.end_time:
+    #             # if the particle is inside the cuboid as retrieved from the mask
+    #             # apply the impulse
+    #             if param.mask[p] == 1:
+    #                 impulse = wp.vec3(
+    #                     param.force[0] / state.particle_mass[p],
+    #                     param.force[1] / state.particle_mass[p],
+    #                     param.force[2] / state.particle_mass[p],
+    #                 )
+    #                 state.particle_v[p] = state.particle_v[p] + impulse * dt
+
+    #     self.pre_p2g_operations.append(apply_force)
+
     def add_impulse_on_particles(
         self,
         force,
@@ -917,12 +970,18 @@ class MPM_Simulator_WARP:
                 # if the particle is inside the cuboid as retrieved from the mask
                 # apply the impulse
                 if param.mask[p] == 1:
+                    # impulse = wp.vec3(
+                    #     param.force[0] / state.particle_mass[p],
+                    #     param.force[1] / state.particle_mass[p],
+                    #     param.force[2] / state.particle_mass[p],
+                    # )
                     impulse = wp.vec3(
-                        param.force[0] / state.particle_mass[p],
-                        param.force[1] / state.particle_mass[p],
-                        param.force[2] / state.particle_mass[p],
+                        param.force[0],
+                        param.force[1],
+                        param.force[2],
                     )
-                    state.particle_v[p] = state.particle_v[p] + impulse * dt
+                    # state.particle_v[p] = state.particle_v[p] + impulse * dt
+                    state.particle_v[p] = impulse*5.0
 
         self.pre_p2g_operations.append(apply_force)
 

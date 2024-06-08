@@ -156,7 +156,7 @@ if __name__ == "__main__":
         preprocessing_params["rotation_axis"],
     )
     rotated_pos = apply_rotations(init_pos, rotation_matrices)
-    print ("are rotation and init pos the same? ", rotated_pos == init_pos)
+    print ("are rotation and init pos the same? ", rotated_pos == init_pos)   # yes
 
     print ("rotated_pos ", rotated_pos.shape, rotated_pos[:5])
 
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     )
     print ("preprocessing_params[sim_area] ", preprocessing_params["sim_area"])
     
-    if preprocessing_params["sim_area"] is not None:
+    if preprocessing_params["sim_area"] is not None:  # is None
         boundary = preprocessing_params["sim_area"]
         assert len(boundary) == 6
         mask = torch.ones(rotated_pos.shape[0], dtype=torch.bool).to(device="cuda")

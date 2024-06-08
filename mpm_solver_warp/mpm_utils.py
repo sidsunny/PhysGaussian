@@ -588,7 +588,7 @@ def selection_add_impulse_on_particles(
     state: MPMStateStruct, impulse_modifier: Impulse_modifier
 ):
     p = wp.tid()
-    offset = state.particle_x[p] - impulse_modifier.point
+    offset = state.particle_x[p] - impulse_modifier.point       # offset from the point of impulse
     if (
         wp.abs(offset[0]) < impulse_modifier.size[0]
         and wp.abs(offset[1]) < impulse_modifier.size[1]
